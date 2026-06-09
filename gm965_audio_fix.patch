@@ -1,0 +1,20 @@
+--- a/common/hw-gfx-gma.adb
++++ b/common/hw-gfx-gma.adb
+@@ -514,7 +514,7 @@
+       is
+          Audio_VID_DID : Word32;
+       begin
+-         if Config.Gen_I945 then
++         if Config.Gen_I945 or Config.GMCH_GM965 then
+             -- i945 has no integrated audio DID to verify
+             Success := True;
+             return;
+@@ -530,8 +530,6 @@
+               Config.CPU_Sandybridge)  and (Audio_VID_DID = 16#8086_2806# or
+                                             Audio_VID_DID = 16#8086_2805#)) or
+             (Config.CPU_Ironlake       and Audio_VID_DID = 16#0000_0000#) or
+-            -- GM965 has no G4X HD Audio, register reads as 0
+-            (Config.GMCH_GM965         and Audio_VID_DID = 16#0000_0000#) or
+             (Config.Gen_G45            and (Audio_VID_DID = 16#8086_2801# or
+                                             Audio_VID_DID = 16#8086_2802# or
+                                             Audio_VID_DID = 16#8086_2803#)) or
