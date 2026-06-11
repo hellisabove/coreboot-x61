@@ -1,15 +1,17 @@
+diff --git a/common/hw-gfx-gma.adb b/common/hw-gfx-gma.adb
+index 860fcbd..665909c 100644
 --- a/common/hw-gfx-gma.adb
 +++ b/common/hw-gfx-gma.adb
-@@ -514,7 +514,7 @@
+@@ -514,7 +514,7 @@ is
        is
           Audio_VID_DID : Word32;
        begin
 -         if Config.Gen_I945 then
-+         if Config.Gen_I945 or Config.GMCH_GM965 then
++         if Config.Gen_I945 or Config.GMCH_GM96 then
              -- i945 has no integrated audio DID to verify
              Success := True;
              return;
-@@ -530,8 +530,6 @@
+@@ -530,8 +530,6 @@ is
                Config.CPU_Sandybridge)  and (Audio_VID_DID = 16#8086_2806# or
                                              Audio_VID_DID = 16#8086_2805#)) or
              (Config.CPU_Ironlake       and Audio_VID_DID = 16#0000_0000#) or

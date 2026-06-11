@@ -71,8 +71,9 @@ make nconfig
 to populate the rest of the config
 
 ### Compiling
+The added flag for the make command will make sure that the libgfxinit checkout we did earlier will remain
 ```sh
-make -j$(nproc)
+make UPDATED_SUBMODULES=1 -j$(nproc)
 ```
 
 ### Flashing
