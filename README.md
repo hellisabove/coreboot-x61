@@ -3,7 +3,7 @@
 This repo is a simple guide to compiling and flashing coreboot to your Thinkpad X61.
 I take no responsability if you brick your laptop while attempting to flash coreboot.
 I will use a raspberry pi pico flashed with the serprog firmware from libreboot as a programmer.
-You can use whatever programmer you want, just make sure it is good and does not cause problems for power (**OUTPUT VOLTAGE NEEDS TO BE 3.3V**)
+You can use whatever programmer you want, just make sure it is good and it is stable while delivering the voltage. Also make sure it **OUTPUTS 3.3V**, otherwise you risk burning your bios chip.
 
 **Always keep a backup of your BIOS!!!!!!**
 
@@ -26,7 +26,7 @@ git clone --recursive https://review.coreboot.org/coreboot ~/coreboot
 cd ~/coreboot
 ```
 
-### Extracting the blobs
+### Extracting and patching the blobs
 ```sh
 make -c util/ifdtool
 cd ..
@@ -42,18 +42,17 @@ If both dumps are identical then you can continue:
 ```sh
 ~/coreboot/util/ifdtool/ifdtool -x dump1.bin
 ```
-This command will extract 5 blobs. Remove flashregion_1_bios.bin, as we will not need it anymore and flashregion_4 as it will most certainly be empty.
-Don't forget to keep one dump in case you want to revert to the original bios.
-
-### Patch libgfxinit
-At the moment when writing this, libgfxinit support is still kindof spotty. You will be able to use only tty in linux. Don't know about Windows, *BSDs or what other OSes do people use on the x61. If you want to use vgabios, skip this portion.
+This command will extract 5 blobs. Remove flashregion_1_bios.bin, as we will not need it anymore, flashregion_4 as it will most certainly be empty and flashregion_2_me.bin as we will fully remove intel me from our build.
+You will need to run this command in order to patch the flash descriptor:
 ```sh
-cd 3rdparty/libgfxinit
-git fetch https://review.sourcearcade.org/libgfxinit refs/changes/99/499/5 && git reset --hard FETCH_HEAD
-cp repo/gm965_audio_fix.patch ~/coreboot/3rdparty/libgfxinit
-patch -p1 < gm965_audio_fix.patch
-cd ../..
+ifdtool -n new_layout.txt flashregion_0_flashdescriptor.bin
+ifdtool -M 1 flashregion_0_flashdescriptor.bin.new
+rm flashregion_0_flashdescriptor.bin
+rm flashregion_0_flashdescriptor.bin.new
+mv flashregion_0_flashdescriptor.bin.new.new flashregion_0_flashdescriptor.bin
 ```
+These commands will patch the ifd layout, set the MeAltDisable bit in the ifd and remove the old flash descriptors.
+Don't forget to keep one dump of your OEM bios in case you want to revert to it.
 
 ### Setup the toolchain
 ```sh
@@ -61,9 +60,9 @@ make crossgcc-i386 CPUS=$(nproc)
 ```
 
 ### Configure
-If you use libgfxinit, use the normal config.
+If you use libgfxinit, use the libgfxinit config.
 If you use vgabios, use the vgabios config.
-**For both configs, you will need to edit the paths to your ifd, gbe and me blobs extracted from your original bios!**
+**For both configs, you will need to edit the paths to your ifd and gbe blobs extracted from your original bios!**
 After renaming your chosen config to .config, just run
 ```sh
 make nconfig
@@ -71,9 +70,8 @@ make nconfig
 to populate the rest of the config
 
 ### Compiling
-The added flag for the make command will make sure that the libgfxinit checkout we did earlier will remain
 ```sh
-make UPDATED_SUBMODULES=1 -j$(nproc)
+make -j$(nproc)
 ```
 
 ### Flashing
